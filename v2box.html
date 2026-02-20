@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Импорт в V2BOX...</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #121212; color: white; text-align: center; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="loader"></div>
+        <p>Перенаправляем в V2BOX...</p>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // 1. Получаем конфиг из параметров URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const vlessConfig = urlParams.get('config');
+
+            if (vlessConfig) {
+                // 2. Пытаемся открыть V2BOX через протокол vless://
+                window.location.href = vlessConfig;
+
+                // 3. Если приложение не открылось за 1.5 секунды, показываем инструкцию
+                setTimeout(() => {
+                    document.body.innerHTML = `
+                        <div style="padding: 20px;">
+                            <h3>Приложение не открылось?</h3>
+                            <p>Убедитесь, что у вас установлен <b>V2BOX</b>.</p>
+                            <a href="https://apps.apple.com/app/v2box/id1639803551" style="color: #3498db; text-decoration: none;">Скачать V2BOX в App Store</a>
+                            <br><br>
+                            <button onclick="location.reload()" style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">Попробовать снова</button>
+                        </div>
+                    `;
+                }, 1500);
+            } else {
+                document.body.innerHTML = "<h3>Ошибка: Конфигурация не найдена в запросе.</h3>";
+            }
+        };
+    </script>
+</body>
+</html>
