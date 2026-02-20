@@ -17,27 +17,23 @@
     <a id="manual_link" class="btn">ОТКРЫТЬ V2BOX</a>
 
     <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const rawConfig = urlParams.get('config'); // Получаем закодированную строку
+    const params = new URLSearchParams(window.location.search);
+    const config = params.get('config');
     const btn = document.getElementById('manual_link');
 
-    if (rawConfig) {
-        // 1. Декодируем строку обратно в чистый VLESS (убираем %3A, %26 и т.д.)
-        const fullConfig = decodeURIComponent(rawConfig).split(' ')[0];
-        
-        // 2. Формируем ссылку для V2Box, кодируя её заново для безопасности deep-link
-        const deepLink = "v2box://install-config?url=" + encodeURIComponent(fullConfig);
+    if (config) {
+        // Мы передаем Base64 напрямую. 
+        // V2Box поймет, что это закодированный конфиг, и развернет его сам.
+        const deepLink = "v2box://install-config?url=" + config;
         
         btn.href = deepLink;
         window.location.href = deepLink;
 
         setTimeout(() => {
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Нажмите для завершения импорта:";
+            document.getElementById('status').innerText = "Нажмите для импорта:";
             btn.style.display = 'block';
         }, 1000);
-    } else {
-        document.getElementById('status').innerText = "Ошибка: Конфигурация не получена";
     }
 </script>
 </body>
