@@ -17,31 +17,28 @@
     <a id="manual_link" class="btn">ОТКРЫТЬ V2BOX</a>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const config = urlParams.get('config');
-        const btn = document.getElementById('manual_link');
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawConfig = urlParams.get('config'); // Получаем закодированную строку
+    const btn = document.getElementById('manual_link');
 
-        if (config) {
-            // Берем только часть до первого пробела, чтобы отсечь мусор браузера
-            const cleanConfig = config.split(' ')[0];
-            
-            // Формируем ссылку для приложения
-            const deepLink = "v2box://install-config?url=" + cleanConfig;
-            
-            btn.href = deepLink;
+    if (rawConfig) {
+        // 1. Декодируем строку обратно в чистый VLESS (убираем %3A, %26 и т.д.)
+        const fullConfig = decodeURIComponent(rawConfig).split(' ')[0];
+        
+        // 2. Формируем ссылку для V2Box, кодируя её заново для безопасности deep-link
+        const deepLink = "v2box://install-config?url=" + encodeURIComponent(fullConfig);
+        
+        btn.href = deepLink;
+        window.location.href = deepLink;
 
-            // Сразу пытаемся открыть приложение
-            window.location.href = deepLink;
-
-            // Если через 1.5 секунды мы все еще тут, показываем кнопку
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('status').innerText = "Если приложение не открылось:";
-                btn.style.display = 'block';
-            }, 1500);
-        } else {
-            document.getElementById('status').innerText = "Ошибка: Ссылка пустая";
-        }
-    </script>
+        setTimeout(() => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('status').innerText = "Нажмите для завершения импорта:";
+            btn.style.display = 'block';
+        }, 1000);
+    } else {
+        document.getElementById('status').innerText = "Ошибка: Конфигурация не получена";
+    }
+</script>
 </body>
 </html>
