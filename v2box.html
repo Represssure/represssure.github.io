@@ -5,39 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Подключение V2Box</title>
     <style>
-        body { background-color: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .btn { display: none; padding: 15px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; }
+        body { background-color: #000; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .btn { display: none; padding: 16px 32px; background-color: #007bff; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,123,255,0.3); }
+        .loader { border: 3px solid #333; border-top: 3px solid #007bff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="loader" id="loader"></div>
-    <p id="status">Перенаправляем в V2Box...</p>
+    <div id="loader" class="loader"></div>
+    <div id="status">Перенаправляем в V2Box...</div>
     
-    <a href="#" id="manual_link" class="btn">ОТКРЫТЬ V2BOX ВРУЧНУЮ</a>
+    <a href="#" id="manual_link" class="btn">ОТКРЫТЬ V2BOX</a>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const config = urlParams.get('config');
-        const statusText = document.getElementById('status');
         const btn = document.getElementById('manual_link');
 
         if (config) {
-            // Формируем глубокую ссылку для приложения
+            // Формируем прямую ссылку для V2Box
             const deepLink = "v2box://install-config?url=" + encodeURIComponent(config);
-            
-            // Устанавливаем ссылку на кнопку
             btn.href = deepLink;
-            btn.style.display = 'block';
 
-            // Пробуем автоматический переход
+            // 1. Пробуем мгновенный переход
             window.location.href = deepLink;
 
-            // Если через 3 секунды мы все еще на этой странице - скрываем лоадер
+            // 2. Через 1 секунду показываем кнопку на случай блокировки
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
-                statusText.innerText = "Если приложение не открылось, нажмите кнопку ниже:";
-            }, 3000);
+                document.getElementById('status').innerText = "Если приложение не открылось:";
+                btn.style.display = 'inline-block';
+            }, 1000);
         } else {
-            statusText.innerText = "Ошибка: Конфигурация не най
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('status').innerText = "Ошибка: Ссылка не содержит конфиг.";
+        }
+    </script>
+</body>
+</html>
