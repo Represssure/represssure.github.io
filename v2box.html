@@ -17,30 +17,32 @@
     <a id="manual_link" class="btn">ОТКРЫТЬ V2BOX</a>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        let config = urlParams.get('config');
-        const btn = document.getElementById('manual_link');
+    const urlParams = new URLSearchParams(window.location.search);
+    let config = urlParams.get('config');
+    const btn = document.getElementById('manual_link');
 
-        if (config) {
-            // Очистка ссылки: декодируем и убираем лишние метаданные браузера, которые ломают импорт
-            // Мы берем только часть до первого пробела или лишних заголовков
-            let decodedConfig = decodeURIComponent(config).split(' ')[0];
-            
-            // Прямая ссылка vless:// обычно лучше всего понимается приложением при редиректе
-            btn.href = decodedConfig;
+    if (config) {
+        // 1. Декодируем и берем ТОЛЬКО часть до первого пробела.
+        // Это отсечет весь мусор (Mozilla/5.0...), который мы видели на скрине.
+        let cleanConfig = decodeURIComponent(config).split(' ')[0].trim();
+        
+        // 2. Используем официальную схему импорта V2Box
+        const deepLink = "v2box://install-config?url=" + encodeURIComponent(cleanConfig);
+        
+        btn.href = deepLink;
 
-            // Пробуем автоматический переход
-            window.location.href = decodedConfig;
+        // Попытка автоматического перехода
+        window.location.href = deepLink;
 
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('status').innerText = "Если импорт не начался, нажмите кнопку:";
-                btn.style.display = 'inline-block';
-            }, 1500);
-        } else {
+        setTimeout(() => {
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Ошибка: Конфигурация не найдена.";
-        }
-    </script>
+            document.getElementById('status').innerText = "Нажмите для импорта:";
+            btn.style.display = 'inline-block';
+        }, 1000);
+    } else {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('status').innerText = "Ошибка: Конфигурация пуста.";
+    }
+</script>
 </body>
 </html>
