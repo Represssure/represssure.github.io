@@ -18,37 +18,41 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    let configRaw = params.get('config');
+    const configRaw = params.get('config');
     const btn = document.getElementById('manual_link');
 
     if (configRaw) {
         try {
-            // 1. Декодируем Base64
-            // Заменяем URL-safe символы на стандартные, если они есть
-            let base64 = configRaw.replace(/-/g, '+').replace(/_/g, '/');
-            let decoded = atob(base64);
+            // 1. Декодируем Base64 в чистую строку vless://...
+            const decoded = atob(configRaw.replace(/-/g, '+').replace(/_/g, '/')).trim();
             
-            // 2. Формируем глубокую ссылку. 
-            // ВАЖНО: encodeURIComponent обязателен для iOS!
-            const deepLink = decoded;
+            // 2. Проверяем, является ли устройство iOS (iPhone, iPad, iPod)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+            let deepLink;
+            if (isIOS) {
+                // Для iOS лучше всего работает прямая ссылка протокола
+                deepLink = decoded;
+            } else {
+                // Для Android и других систем используем стандартную схему импорта
+                deepLink = "v2box://install-config?url=" + encodeURIComponent(decoded);
+            }
             
             btn.href = deepLink;
-
-            // 3. Убираем лоадер и показываем кнопку
             document.getElementById('loader').style.display = 'none';
             document.getElementById('status').innerText = "Конфигурация готова:";
             btn.style.display = 'block';
 
-            // 4. Пытаемся сделать авто-редирект (сработает не у всех)
+            // Попытка авто-перехода
             window.location.href = deepLink;
 
         } catch (e) {
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Ошибка формата данных";
+            document.getElementById('status').innerText = "Ошибка в формате ключа";
         }
     } else {
-        document.getElementById('status').innerText = "Конфиг не найден";
+        document.getElementById('status').innerText = "Ключ не найден";
     }
-    </script>
+</script>
 </body>
 </html>
