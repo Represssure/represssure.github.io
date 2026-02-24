@@ -18,22 +18,38 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    const config = params.get('config');
+    let configBase64 = params.get('config');
     const btn = document.getElementById('manual_link');
 
-    if (config) {
-        // Мы передаем Base64 напрямую. 
-        // V2Box поймет, что это закодированный конфиг, и развернет его сам.
-        const deepLink = "v2box://install-config?url=" + config;
-        
-        btn.href = deepLink;
-        window.location.href = deepLink;
+    if (configBase64) {
+        try {
+            // 1. Декодируем Base64 обратно в строку vless://...
+            // Мы используем decodeURIComponent и replace, чтобы корректно обработать url-safe base64
+            let decodedConfig = atob(configBase64.replace(/-/g, '+').replace(/_/g, '/'));
+            
+            // 2. Кодируем саму строку vless для безопасной передачи в URL
+            // Это критично для iOS, чтобы символы # и & не обрезались
+            const safeConfig = encodeURIComponent(decodedConfig);
+            
+            const deepLink = "v2box://install-config?url=" + safeConfig;
+            
+            btn.href = deepLink;
+            // Попытка автоматического перехода
+            window.location.href = deepLink;
 
-        setTimeout(() => {
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('status').innerText = "Если приложение не открылось, нажмите кнопку:";
+                btn.style.display = 'block';
+            }, 1500);
+            
+        } catch (e) {
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Нажмите для импорта:";
-            btn.style.display = 'block';
-        }, 1000);
+            document.getElementById('status').innerText = "Ошибка: неверный формат конфига";
+            console.error(e);
+        }
+    } else {
+        document.getElementById('status').innerText = "Конфиг не найден в URL";
     }
 </script>
 </body>
