@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inforest Proxy</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f4f4f9; color: #333; }
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f4f4f9; color: #333; }
         .btn { background: #007bff; color: white; padding: 18px 30px; border-radius: 12px; text-decoration: none; font-weight: bold; display: none; box-shadow: 0 4px 15px rgba(0,123,255,0.3); }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -13,44 +13,42 @@
 </head>
 <body>
     <div id="loader" class="loader"></div>
-    <p id="status">Запуск V2Box...</p>
-    <a id="manual_link" class="btn">ОТКРЫТЬ V2BOX</a>
+    <p id="status">Подготовка конфигурации...</p>
+    <a id="manual_link" class="btn">ИМПОРТИРОВАТЬ В V2BOX</a>
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    let configBase64 = params.get('config');
+    let configRaw = params.get('config');
     const btn = document.getElementById('manual_link');
 
-    if (configBase64) {
+    if (configRaw) {
         try {
-            // 1. Декодируем Base64 обратно в строку vless://...
-            // Мы используем decodeURIComponent и replace, чтобы корректно обработать url-safe base64
-            let decodedConfig = atob(configBase64.replace(/-/g, '+').replace(/_/g, '/'));
+            // 1. Декодируем Base64
+            // Заменяем URL-safe символы на стандартные, если они есть
+            let base64 = configRaw.replace(/-/g, '+').replace(/_/g, '/');
+            let decoded = atob(base64);
             
-            // 2. Кодируем саму строку vless для безопасной передачи в URL
-            // Это критично для iOS, чтобы символы # и & не обрезались
-            const safeConfig = encodeURIComponent(decodedConfig);
-            
-            const deepLink = "v2box://install-config?url=" + safeConfig;
+            // 2. Формируем глубокую ссылку. 
+            // ВАЖНО: encodeURIComponent обязателен для iOS!
+            const deepLink = "v2box://install-config?url=" + encodeURIComponent(decoded);
             
             btn.href = deepLink;
-            // Попытка автоматического перехода
+
+            // 3. Убираем лоадер и показываем кнопку
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('status').innerText = "Конфигурация готова:";
+            btn.style.display = 'block';
+
+            // 4. Пытаемся сделать авто-редирект (сработает не у всех)
             window.location.href = deepLink;
 
-            setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('status').innerText = "Если приложение не открылось, нажмите кнопку:";
-                btn.style.display = 'block';
-            }, 1500);
-            
         } catch (e) {
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Ошибка: неверный формат конфига";
-            console.error(e);
+            document.getElementById('status').innerText = "Ошибка формата данных";
         }
     } else {
-        document.getElementById('status').innerText = "Конфиг не найден в URL";
+        document.getElementById('status').innerText = "Конфиг не найден";
     }
-</script>
+    </script>
 </body>
 </html>
