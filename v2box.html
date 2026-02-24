@@ -30,7 +30,7 @@
             
             // 2. Формируем глубокую ссылку. 
             // ВАЖНО: encodeURIComponent обязателен для iOS!
-            const deepLink = "v2box://install-config?url=" + encodeURIComponent(decoded);
+            const deepLink = decoded;
             
             btn.href = deepLink;
 
