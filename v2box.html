@@ -18,38 +18,38 @@
     <a href="#" class="btn" id="manual_link">ИМПОРТИРОВАТЬ В V2BOX</a>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        let configBase64 = params.get('config');
+    const params = new URLSearchParams(window.location.search);
+    const configBase64 = params.get('config');
 
-        if (configBase64) {
-            try {
-                // 1. Декодируем Base64, пришедший из бота
-                // Делаем замену пробелов на +, так как URL может их исказить
-                let rawBase64 = decodeURIComponent(configBase64).replace(/ /g, '+');
-                let vlessLink = atob(rawBase64).trim();
+    if (configBase64) {
+        try {
+            // 1. Получаем чистую ссылку vless://...
+            const vlessLink = atob(decodeURIComponent(configBase64).replace(/ /g, '+')).trim();
+            
+            // 2. Кодируем ВСЮ ссылку в Base64 еще раз
+            const fileContentBase64 = btoa(vlessLink);
+            
+            // 3. Создаем Data URI. Для V2Box это выглядит как прямая ссылка на скачивание файла.
+            // При скачивании файла приложение не может "обрезать" его содержимое.
+            const dataUri = "data:text/plain;base64," + fileContentBase64;
+            
+            // 4. Формируем глубокую ссылку
+            const deepLink = "v2box://install-config?url=" + encodeURIComponent(dataUri);
+            
+            document.getElementById('status').innerText = "Импорт полной конфигурации...";
+            window.location.href = deepLink;
 
-                // 2. ДВОЙНОЕ ЭКРАНИРОВАНИЕ
-                // Это заменяет все & на %26, чтобы V2Box не обрезал ссылку
-                let safeVless = encodeURIComponent(vlessLink);
-                let deepLink = "v2box://install-config?url=" + safeVless;
-
-                // 3. Пытаемся открыть приложение
-                window.location.href = deepLink;
-
-                document.getElementById('status').innerText = "Конфигурация готова. Если приложение не открылось автоматически, нажмите кнопку ниже:";
-                
+            setTimeout(() => {
                 const btn = document.getElementById('manual_link');
                 btn.href = deepLink;
                 btn.style.display = 'block';
                 document.getElementById('loader').style.display = 'none';
+            }, 1000);
 
-            } catch (e) {
-                document.getElementById('status').innerText = "Ошибка: данные повреждены. Перевыпустите ссылку в боте.";
-                console.error(e);
-            }
-        } else {
-            document.getElementById('status').innerText = "Конфигурация не найдена.";
+        } catch (e) {
+            document.getElementById('status').innerText = "Ошибка данных";
         }
-    </script>
+    }
+</script>
 </body>
 </html>
