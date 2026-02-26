@@ -18,33 +18,35 @@
 
    <script>
     const params = new URLSearchParams(window.location.search);
-    const configBase64 = params.get('config'); // Используем твой текущий ключ из main.py
+    let configRaw = params.get('config');
 
-    if (configBase64) {
+    if (configRaw) {
         try {
-            // Декодируем base64 в чистую ссылку vless://...
-            const vlessLink = atob(configBase64).trim();
+            // 1. Декодируем Base64 (обрабатывая возможные пробелы вместо +)
+            const base64 = decodeURIComponent(configRaw).replace(/ /g, '+');
+            const vlessLink = atob(base64).trim();
             
-            // Прямой вызов протокола. Самый надежный способ "старой школы".
-            const deepLink = vlessLink; 
+            // 2. Формируем глубокую ссылку для V2Box
+            // Мы кодируем vless://, чтобы приложение прочитало её как текст, а не как сайт
+            const deepLink = "v2box://install-config?url=" + encodeURIComponent(vlessLink);
             
-            document.getElementById('status').innerText = "Подготовка конфигурации...";
-            
-            // Пытаемся открыть приложение сразу
+            // 3. Сразу пытаемся открыть
             window.location.href = deepLink;
 
-            // Если за 2 секунды не ушли со страницы — показываем кнопку
+            // Показываем кнопку на случай, если авто-переход заблокирован
             setTimeout(() => {
                 const btn = document.getElementById('manual_link');
                 btn.href = deepLink;
                 btn.style.display = 'block';
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('status').innerText = "Нажмите кнопку для импорта:";
-            }, 2000);
+                document.getElementById('status').innerText = "Нажмите для импорта в V2Box";
+            }, 500);
 
         } catch (e) {
-            document.getElementById('status').innerText = "Ошибка в данных ссылки";
+            document.getElementById('status').innerText = "Ошибка: данные повреждены";
         }
+    } else {
+        document.getElementById('status').innerText = "Конфигурация не найдена";
     }
 </script>
 </body>
