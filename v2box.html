@@ -18,40 +18,32 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    const configRaw = params.get('config');
+    const configId = params.get('id');
     const btn = document.getElementById('manual_link');
+    const status = document.getElementById('status');
 
-    if (configRaw) {
-        try {
-            // 1. Декодируем Base64 в чистую строку vless://...
-            const decoded = atob(configRaw.replace(/-/g, '+').replace(/_/g, '/')).trim();
-            
-            // 2. Проверяем, является ли устройство iOS (iPhone, iPad, iPod)
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (configId) {
+        // Запрашиваем реальный конфиг с вашего сервера (порт 8085)
+        // Замените IP на ваш реальный IP сервера
+        fetch(`http://146.0.79.241:8085/cfg/${configId}`)
+            .then(response => response.text())
+            .then(vlessLink => {
+                const decoded = vlessLink.trim();
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-            let deepLink;
-            if (isIOS) {
-                // Для iOS лучше всего работает прямая ссылка протокола
-                deepLink = decoded;
-            } else {
-                // Для Android и других систем используем стандартную схему импорта
-                deepLink = "v2box://install-config?url=" + encodeURIComponent(decoded);
-            }
-            
-            btn.href = deepLink;
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Конфигурация готова:";
-            btn.style.display = 'block';
+                const deepLink = isIOS ? decoded : "v2box://install-config?url=" + encodeURIComponent(decoded);
+                
+                btn.href = deepLink;
+                document.getElementById('loader').style.display = 'none';
+                status.innerText = "Конфигурация получена!";
+                btn.style.display = 'block';
 
-            // Попытка авто-перехода
-            window.location.href = deepLink;
-
-        } catch (e) {
-            document.getElementById('status').innerText = "Ошибка в формате ключа";
-        }
-    } else {
-        document.getElementById('status').innerText = "Ключ не найден";
+                window.location.href = deepLink;
+            })
+            .catch(err => {
+                status.innerText = "Ошибка загрузки конфига";
+            });
     }
 </script>
 </body>
