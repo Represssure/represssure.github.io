@@ -18,30 +18,31 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    const hex = params.get('h'); // Берем параметр 'h'
+    const hex = params.get('h');
     const btn = document.getElementById('manual_link');
 
     if (hex) {
         try {
-            // Превращаем HEX обратно в строку vless://
+            // Декодируем HEX обратно в vless://
             let str = '';
             for (let i = 0; i < hex.length; i += 2) {
                 str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
             }
             const decoded = str.trim();
             
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-            // iOS — прямой протокол, Android — схема v2box
-            const deepLink = isIOS ? decoded : "v2box://install-config?url=" + encodeURIComponent(decoded);
+            // На Android и iOS теперь используем ПРЯМУЮ ссылку протокола.
+            // Это самый надежный способ, который не требует от приложения 
+            // умения парсить сложные вложенные URL.
+            const deepLink = decoded; 
             
             btn.href = deepLink;
             document.getElementById('loader').style.display = 'none';
             document.getElementById('status').innerText = "Конфигурация готова!";
             btn.style.display = 'block';
 
+            // Авто-переход для Android/iOS
             window.location.href = deepLink;
+
         } catch (e) {
             document.getElementById('status').innerText = "Ошибка обработки данных";
         }
