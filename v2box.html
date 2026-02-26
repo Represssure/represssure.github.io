@@ -18,32 +18,29 @@
 
    <script>
     const params = new URLSearchParams(window.location.search);
-    const hex = params.get('h');
-    const btn = document.getElementById('manual_link');
+    const configBase64 = params.get('config'); // Твой текущий параметр в main.py
 
-    if (hex) {
+    if (configBase64) {
         try {
-            // 1. Декодируем HEX обратно в vless://...
-            let str = '';
-            for (let i = 0; i < hex.length; i += 2) {
-                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-            }
-            const decodedConfig = str.trim();
+            // Декодируем base64, который прислал бот
+            const vlessLink = atob(configBase64).trim();
             
-            // 2. Формируем ссылку через параметр 'config' (для импорта текста)
-            // и через 'url' (как запасной вариант)
-            const deepLink = "v2box://install-config?config=" + encodeURIComponent(decodedConfig);
+            // Формируем прямую команду для приложения
+            // Мы используем саму vless-ссылку как URL. V2Box это понимает.
+            const deepLink = "v2box://install-config?url=" + encodeURIComponent(vlessLink);
             
-            btn.href = deepLink;
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Конфигурация готова!";
-            btn.style.display = 'block';
-
-            // 3. Пытаемся открыть автоматически
+            document.getElementById('status').innerText = "Открываем V2Box...";
             window.location.href = deepLink;
 
+            // Если не открылось автоматически через 2 секунды, показываем кнопку
+            setTimeout(() => {
+                const btn = document.getElementById('manual_link');
+                btn.href = deepLink;
+                btn.style.display = 'block';
+            }, 2000);
+
         } catch (e) {
-            document.getElementById('status').innerText = "Ошибка обработки данных";
+            document.getElementById('status').innerText = "Ошибка в ссылке";
         }
     }
 </script>
