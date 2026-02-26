@@ -23,28 +23,29 @@
 
     if (configBase64) {
         try {
-            // 1. Получаем чистую ссылку vless://...
-            const vlessLink = atob(decodeURIComponent(configBase64).replace(/ /g, '+')).trim();
+            // 1. Декодируем Base64 из бота в обычную строку vless://
+            const rawVless = atob(decodeURIComponent(configBase64).replace(/ /g, '+')).trim();
             
-            // 2. Кодируем ВСЮ ссылку в Base64 еще раз
-            const fileContentBase64 = btoa(vlessLink);
-            
-            // 3. Создаем Data URI. Для V2Box это выглядит как прямая ссылка на скачивание файла.
-            // При скачивании файла приложение не может "обрезать" его содержимое.
-            const dataUri = "data:text/plain;base64," + fileContentBase64;
-            
-            // 4. Формируем глубокую ссылку
-            const deepLink = "v2box://install-config?url=" + encodeURIComponent(dataUri);
-            
-            document.getElementById('status').innerText = "Импорт полной конфигурации...";
+            // 2. ГЛАВНОЕ ИСПРАВЛЕНИЕ:
+            // Вместо того, чтобы кодировать всю ссылку (что вызывало ошибку импорта),
+            // мы заменяем ТОЛЬКО проблемные символы на их URL-коды.
+            // Это обманывает парсер Android и корректно читается на iOS.
+            const safeVless = rawVless
+                .replace(/\?/g, '%3F')
+                .replace(/&/g, '%26')
+                .replace(/#/g, '%23');
+
+            const deepLink = "v2box://install-config?url=" + safeVless;
+
+            // 3. Пытаемся открыть
             window.location.href = deepLink;
 
-            setTimeout(() => {
-                const btn = document.getElementById('manual_link');
-                btn.href = deepLink;
-                btn.style.display = 'block';
-                document.getElementById('loader').style.display = 'none';
-            }, 1000);
+            document.getElementById('status').innerText = "Конфигурация готова!";
+            
+            const btn = document.getElementById('manual_link');
+            btn.href = deepLink;
+            btn.style.display = 'block';
+            document.getElementById('loader').style.display = 'none';
 
         } catch (e) {
             document.getElementById('status').innerText = "Ошибка данных";
