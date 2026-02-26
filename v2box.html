@@ -16,47 +16,36 @@
     <p id="status">Подготовка конфигурации...</p>
     <a id="manual_link" class="btn">ИМПОРТИРОВАТЬ В V2BOX</a>
 
-    <script>
+   <script>
     const params = new URLSearchParams(window.location.search);
-    const b64 = params.get('b64');
+    const hex = params.get('h');
     const btn = document.getElementById('manual_link');
 
-    if (b64) {
+    if (hex) {
         try {
-            // 1. Возвращаем URL-safe Base64 к стандартному виду
-            let base64String = b64.replace(/-/g, '+').replace(/_/g, '/');
-            
-            // 2. Безопасное декодирование Base64 с поддержкой UTF-8 (для кириллицы/эмодзи в названиях)
-            const binaryString = atob(base64String);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+            // 1. Декодируем HEX обратно в vless://...
+            let str = '';
+            for (let i = 0; i < hex.length; i += 2) {
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
             }
-            const decodedLink = new TextDecoder('utf-8').decode(bytes);
+            const decodedConfig = str.trim();
             
-            // 3. Крайне важно: кодируем URI. 
-            // Это гарантирует, что ОС не обрежет ссылку при передаче в V2Box.
-            const deepLink = encodeURI(decodedLink);
+            // 2. Формируем ссылку через параметр 'config' (для импорта текста)
+            // и через 'url' (как запасной вариант)
+            const deepLink = "v2box://install-config?config=" + encodeURIComponent(decodedConfig);
             
             btn.href = deepLink;
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Конфигурация готова!\nЕсли приложение не открылось автоматически, нажмите кнопку ниже.";
+            document.getElementById('status').innerText = "Конфигурация готова!";
             btn.style.display = 'block';
 
-            // 4. Автоматический переход
-            // Используем таймаут для уверенной отработки DOM на мобильных устройствах
-            setTimeout(() => {
-                window.location.href = deepLink;
-            }, 300);
+            // 3. Пытаемся открыть автоматически
+            window.location.href = deepLink;
 
         } catch (e) {
-            document.getElementById('status').innerText = "Ошибка обработки данных ссылки.";
-            console.error(e);
+            document.getElementById('status').innerText = "Ошибка обработки данных";
         }
-    } else {
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('status').innerText = "Ссылка не найдена.";
     }
-    </script>
+</script>
 </body>
 </html>
