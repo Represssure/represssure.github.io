@@ -19,37 +19,11 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    const configBase64 = params.get('config');
+    const subUrl = params.get('sub'); // Передаем sub_url из бота
 
-    if (configBase64) {
-        try {
-            // 1. Декодируем Base64 из бота в обычную строку vless://
-            const rawVless = atob(decodeURIComponent(configBase64).replace(/ /g, '+')).trim();
-            
-            // 2. ГЛАВНОЕ ИСПРАВЛЕНИЕ:
-            // Вместо того, чтобы кодировать всю ссылку (что вызывало ошибку импорта),
-            // мы заменяем ТОЛЬКО проблемные символы на их URL-коды.
-            // Это обманывает парсер Android и корректно читается на iOS.
-            const safeVless = rawVless
-                .replace(/\?/g, '%3F')
-                .replace(/&/g, '%26')
-                .replace(/#/g, '%23');
-
-            const deepLink = "v2box://install-config?url=" + safeVless;
-
-            // 3. Пытаемся открыть
-            window.location.href = deepLink;
-
-            document.getElementById('status').innerText = "Конфигурация готова!";
-            
-            const btn = document.getElementById('manual_link');
-            btn.href = deepLink;
-            btn.style.display = 'block';
-            document.getElementById('loader').style.display = 'none';
-
-        } catch (e) {
-            document.getElementById('status').innerText = "Ошибка данных";
-        }
+    if (subUrl) {
+        const deepLink = "v2box://install-sub?url=" + encodeURIComponent(subUrl) + "&name=VPN_Server";
+        window.location.href = deepLink;
     }
 </script>
 </body>
