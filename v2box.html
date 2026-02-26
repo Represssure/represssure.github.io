@@ -6,7 +6,7 @@
     <title>Inforest Proxy</title>
     <style>
         body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f4f4f9; color: #333; }
-        .btn { background: #007bff; color: white; padding: 18px 30px; border-radius: 12px; text-decoration: none; font-weight: bold; display: none; box-shadow: 0 4px 15px rgba(0,123,255,0.3); }
+        .btn { background: #007bff; color: white; padding: 18px 30px; border-radius: 12px; text-decoration: none; font-weight: bold; display: none; box-shadow: 0 4px 15px rgba(0,123,255,0.3); text-align: center; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -23,33 +23,40 @@
 
     if (b64) {
         try {
-            // Восстанавливаем стандартный Base64 из URL-safe формата
+            // 1. Возвращаем URL-safe Base64 к стандартному виду
             let base64String = b64.replace(/-/g, '+').replace(/_/g, '/');
             
-            // Безопасное декодирование Base64 с поддержкой UTF-8
+            // 2. Безопасное декодирование Base64 с поддержкой UTF-8 (для кириллицы/эмодзи в названиях)
             const binaryString = atob(base64String);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
-            const decoded = new TextDecoder('utf-8').decode(bytes);
-
-            btn.href = decoded;
+            const decodedLink = new TextDecoder('utf-8').decode(bytes);
+            
+            // 3. Крайне важно: кодируем URI. 
+            // Это гарантирует, что ОС не обрежет ссылку при передаче в V2Box.
+            const deepLink = encodeURI(decodedLink);
+            
+            btn.href = deepLink;
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('status').innerText = "Конфигурация готова!";
+            document.getElementById('status').innerText = "Конфигурация готова!\nЕсли приложение не открылось автоматически, нажмите кнопку ниже.";
             btn.style.display = 'block';
 
-            // На iOS/Android симуляция клика пользователя (btn.click()) 
-            // работает стабильнее, чем прямое изменение window.location.href
+            // 4. Автоматический переход
+            // Используем таймаут для уверенной отработки DOM на мобильных устройствах
             setTimeout(() => {
-                btn.click();
-            }, 500);
+                window.location.href = deepLink;
+            }, 300);
 
         } catch (e) {
-            document.getElementById('status').innerText = "Ошибка обработки данных";
+            document.getElementById('status').innerText = "Ошибка обработки данных ссылки.";
             console.error(e);
         }
+    } else {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('status').innerText = "Ссылка не найдена.";
     }
-</script>
+    </script>
 </body>
 </html>
