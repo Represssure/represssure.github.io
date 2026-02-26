@@ -18,35 +18,36 @@
 
    <script>
     const params = new URLSearchParams(window.location.search);
-    let configRaw = params.get('config');
+    const configBase64 = params.get('config'); // Берем Base64 из бота
 
-    if (configRaw) {
+    if (configBase64) {
         try {
-            // 1. Декодируем Base64 (обрабатывая возможные пробелы вместо +)
-            const base64 = decodeURIComponent(configRaw).replace(/ /g, '+');
-            const vlessLink = atob(base64).trim();
+            // 1. Декодируем то, что пришло из бота
+            const vlessLink = atob(decodeURIComponent(configBase64).replace(/ /g, '+')).trim();
             
-            // 2. Формируем глубокую ссылку для V2Box
-            // Мы кодируем vless://, чтобы приложение прочитало её как текст, а не как сайт
-            const deepLink = "v2box://install-config?url=" + encodeURIComponent(vlessLink);
+            // 2. Упаковываем это в формат Data URI (виртуальный файл)
+            // Это заставляет V2Box прочитать ссылку целиком, не теряя параметры Reality
+            const dataUrl = "data:text/plain;base64," + btoa(vlessLink);
             
-            // 3. Сразу пытаемся открыть
+            // 3. Формируем глубокую ссылку
+            const deepLink = "v2box://install-config?url=" + encodeURIComponent(dataUrl);
+            
+            document.getElementById('status').innerText = "Импорт конфигурации...";
+            
+            // 4. Автоматический переход
             window.location.href = deepLink;
 
-            // Показываем кнопку на случай, если авто-переход заблокирован
+            // Кнопка на случай, если браузер заблокировал переход
             setTimeout(() => {
                 const btn = document.getElementById('manual_link');
                 btn.href = deepLink;
                 btn.style.display = 'block';
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('status').innerText = "Нажмите для импорта в V2Box";
-            }, 500);
+            }, 1000);
 
         } catch (e) {
-            document.getElementById('status').innerText = "Ошибка: данные повреждены";
+            document.getElementById('status').innerText = "Ошибка: проверьте ссылку в боте";
         }
-    } else {
-        document.getElementById('status').innerText = "Конфигурация не найдена";
     }
 </script>
 </body>
