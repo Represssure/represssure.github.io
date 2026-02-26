@@ -18,29 +18,32 @@
 
    <script>
     const params = new URLSearchParams(window.location.search);
-    const configBase64 = params.get('config'); // Твой текущий параметр в main.py
+    const configBase64 = params.get('config'); // Используем твой текущий ключ из main.py
 
     if (configBase64) {
         try {
-            // Декодируем base64, который прислал бот
+            // Декодируем base64 в чистую ссылку vless://...
             const vlessLink = atob(configBase64).trim();
             
-            // Формируем прямую команду для приложения
-            // Мы используем саму vless-ссылку как URL. V2Box это понимает.
-            const deepLink = "v2box://install-config?url=" + encodeURIComponent(vlessLink);
+            // Прямой вызов протокола. Самый надежный способ "старой школы".
+            const deepLink = vlessLink; 
             
-            document.getElementById('status').innerText = "Открываем V2Box...";
+            document.getElementById('status').innerText = "Подготовка конфигурации...";
+            
+            // Пытаемся открыть приложение сразу
             window.location.href = deepLink;
 
-            // Если не открылось автоматически через 2 секунды, показываем кнопку
+            // Если за 2 секунды не ушли со страницы — показываем кнопку
             setTimeout(() => {
                 const btn = document.getElementById('manual_link');
                 btn.href = deepLink;
                 btn.style.display = 'block';
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('status').innerText = "Нажмите кнопку для импорта:";
             }, 2000);
 
         } catch (e) {
-            document.getElementById('status').innerText = "Ошибка в ссылке";
+            document.getElementById('status').innerText = "Ошибка в данных ссылки";
         }
     }
 </script>
