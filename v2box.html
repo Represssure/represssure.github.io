@@ -18,33 +18,36 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
-    const hex = params.get('h');
+    const b64 = params.get('b64');
     const btn = document.getElementById('manual_link');
 
-    if (hex) {
+    if (b64) {
         try {
-            // Декодируем HEX обратно в vless://
-            let str = '';
-            for (let i = 0; i < hex.length; i += 2) {
-                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            // Восстанавливаем стандартный Base64 из URL-safe формата
+            let base64String = b64.replace(/-/g, '+').replace(/_/g, '/');
+            
+            // Безопасное декодирование Base64 с поддержкой UTF-8
+            const binaryString = atob(base64String);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
             }
-            const decoded = str.trim();
-            
-            // На Android и iOS теперь используем ПРЯМУЮ ссылку протокола.
-            // Это самый надежный способ, который не требует от приложения 
-            // умения парсить сложные вложенные URL.
-            const deepLink = decoded; 
-            
-            btn.href = deepLink;
+            const decoded = new TextDecoder('utf-8').decode(bytes);
+
+            btn.href = decoded;
             document.getElementById('loader').style.display = 'none';
             document.getElementById('status').innerText = "Конфигурация готова!";
             btn.style.display = 'block';
 
-            // Авто-переход для Android/iOS
-            window.location.href = deepLink;
+            // На iOS/Android симуляция клика пользователя (btn.click()) 
+            // работает стабильнее, чем прямое изменение window.location.href
+            setTimeout(() => {
+                btn.click();
+            }, 500);
 
         } catch (e) {
             document.getElementById('status').innerText = "Ошибка обработки данных";
+            console.error(e);
         }
     }
 </script>
